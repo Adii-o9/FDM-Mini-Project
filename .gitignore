@@ -1,3 +1,17 @@
+# Frontend dependencies
+frontend/node_modules/
+node_modules/
+
+# Frontend build output
+frontend/dist/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Python
 __pycache__/
 *.py[cod]
@@ -13,3 +27,6 @@ venv/
 
 # IDE
 .vscode/
+
+# Raw dataset
+hotel_booking.csv
