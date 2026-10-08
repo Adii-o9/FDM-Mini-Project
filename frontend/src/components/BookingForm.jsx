@@ -16,8 +16,11 @@ import {
   AlertCircle,
   RotateCcw,
   Sparkle,
-  Zap
+  BookmarkCheck,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
+import AssessmentSummary from './AssessmentSummary';
 
 const INITIAL_FORM_STATE = {
   lead_time: '',
@@ -36,7 +39,7 @@ const INITIAL_FORM_STATE = {
   total_of_special_requests: 0
 };
 
-// Verified Low-Risk Test Booking (Expected class 0, ~17.91% cancellation)
+// Verified Low-Risk Test Booking (Expected low risk, ~17.9% cancellation)
 const SAMPLE_LOW_RISK = {
   lead_time: 65,
   arrival_date: '2026-08-15',
@@ -54,7 +57,7 @@ const SAMPLE_LOW_RISK = {
   total_of_special_requests: 2
 };
 
-// Verified High-Risk Test Booking (Expected class 1, ~97.44% cancellation)
+// Verified High-Risk Test Booking (Expected high risk, ~97.4% cancellation)
 const SAMPLE_HIGH_RISK = {
   lead_time: 250,
   arrival_date: '2026-09-01',
@@ -79,35 +82,61 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
   const validateField = (name, value) => {
     switch (name) {
       case 'lead_time':
-        if (value === '' || value === null || value === undefined) return 'Lead time is required.';
-        if (Number(value) < 0) return 'Lead time cannot be negative.';
+        if (value === '' || value === null || value === undefined) {
+          return 'Days before arrival is required.';
+        }
+        if (Number(value) < 0) {
+          return 'Days before arrival cannot be negative.';
+        }
         return '';
       case 'arrival_date':
-        if (!value || value.trim() === '') return 'Arrival date is required.';
+        if (!value || value.trim() === '') {
+          return 'Arrival date is required.';
+        }
         return '';
       case 'stays_in_weekend_nights':
-        if (value === '' || value === null || value === undefined) return 'Weekend nights is required.';
-        if (Number(value) < 0) return 'Weekend nights cannot be negative.';
+        if (value === '' || value === null || value === undefined) {
+          return 'Weekend nights is required.';
+        }
+        if (Number(value) < 0) {
+          return 'Weekend nights cannot be negative.';
+        }
         return '';
       case 'stays_in_week_nights':
-        if (value === '' || value === null || value === undefined) return 'Week nights is required.';
-        if (Number(value) < 0) return 'Week nights cannot be negative.';
+        if (value === '' || value === null || value === undefined) {
+          return 'Weekday nights is required.';
+        }
+        if (Number(value) < 0) {
+          return 'Weekday nights cannot be negative.';
+        }
         return '';
       case 'adr':
-        if (value === '' || value === null || value === undefined) return 'Average Daily Rate is required.';
-        if (Number(value) < 0) return 'ADR must be zero or greater.';
+        if (value === '' || value === null || value === undefined) {
+          return 'Average daily room rate is required.';
+        }
+        if (Number(value) < 0) {
+          return 'Average daily room rate cannot be negative.';
+        }
         return '';
       case 'previous_cancellations':
-        if (Number(value) < 0) return 'Previous cancellations cannot be negative.';
+        if (Number(value) < 0) {
+          return 'Previous cancellations cannot be negative.';
+        }
         return '';
       case 'booking_changes':
-        if (Number(value) < 0) return 'Booking changes cannot be negative.';
+        if (Number(value) < 0) {
+          return 'Booking changes cannot be negative.';
+        }
         return '';
       case 'required_car_parking_spaces':
-        if (Number(value) < 0) return 'Parking spaces cannot be negative.';
+        if (Number(value) < 0) {
+          return 'Parking spaces cannot be negative.';
+        }
         return '';
       case 'total_of_special_requests':
-        if (Number(value) < 0) return 'Special requests cannot be negative.';
+        if (Number(value) < 0) {
+          return 'Special requests cannot be negative.';
+        }
         return '';
       default:
         return '';
@@ -145,7 +174,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
       return;
     }
 
-    // Format clean payload with proper types matching BookingRequest schema
+    // Format clean payload with exact types matching BookingRequest schema
     const payload = {
       lead_time: parseInt(formData.lead_time, 10),
       arrival_date: formData.arrival_date,
@@ -178,10 +207,10 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
 
   return (
     <form className="booking-form" onSubmit={handleSubmit} noValidate>
-      {/* Preset Action Bar */}
+      {/* Test Sample Quick Fill Bar */}
       <div className="preset-bar">
         <span className="preset-label">
-          <Zap size={14} /> Quick Test Presets:
+          <BookmarkCheck size={14} /> Quick Samples for Review:
         </span>
         <div className="preset-buttons">
           <button
@@ -189,16 +218,18 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
             className="preset-btn btn-preset-low"
             onClick={() => loadPreset(SAMPLE_LOW_RISK)}
             disabled={isLoading}
+            title="Load sample booking with low cancellation indicators"
           >
-            Sample 1: Low Risk (17.9%)
+            Sample: Low Risk Booking
           </button>
           <button
             type="button"
             className="preset-btn btn-preset-high"
             onClick={() => loadPreset(SAMPLE_HIGH_RISK)}
             disabled={isLoading}
+            title="Load sample booking with high cancellation indicators"
           >
-            Sample 2: High Risk (97.4%)
+            Sample: High Risk Booking
           </button>
           <button
             type="button"
@@ -206,7 +237,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
             onClick={handleReset}
             disabled={isLoading}
           >
-            <RotateCcw size={13} /> Reset
+            <RotateCcw size={13} /> Clear
           </button>
         </div>
       </div>
@@ -224,15 +255,15 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
           <div className="section-number">1</div>
           <div>
             <h2 className="section-title">Booking Information</h2>
-            <p className="section-desc">Key reservation lead time and scheduled check-in date</p>
+            <p className="section-desc">Key timing parameters between reservation placement and check-in</p>
           </div>
         </div>
 
         <div className="fields-grid grid-2">
-          {/* Lead Time */}
+          {/* Lead Time / Days Before Arrival */}
           <div className={`form-field ${errors.lead_time ? 'has-error' : ''}`}>
             <label htmlFor="lead_time" className="field-label">
-              <Clock size={15} /> Lead Time (Days) <span className="required-star">*</span>
+              <Clock size={15} /> Days Before Arrival <span className="required-star">*</span>
             </label>
             <input
               id="lead_time"
@@ -245,7 +276,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-input"
               required
             />
-            <span className="field-help">Days between booking date and arrival date</span>
+            <span className="field-help">Number of days between the booking date and arrival date.</span>
             {errors.lead_time && <span className="field-error-msg">{errors.lead_time}</span>}
           </div>
 
@@ -263,7 +294,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-input"
               required
             />
-            <span className="field-help">Scheduled arrival date (YYYY-MM-DD)</span>
+            <span className="field-help">Scheduled guest check-in date.</span>
             {errors.arrival_date && <span className="field-error-msg">{errors.arrival_date}</span>}
           </div>
         </div>
@@ -274,8 +305,8 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
         <div className="section-header">
           <div className="section-number">2</div>
           <div>
-            <h2 className="section-title">Stay & Revenue Details</h2>
-            <p className="section-desc">Length of stay duration and daily room revenue rate</p>
+            <h2 className="section-title">Stay & Room Rate Details</h2>
+            <p className="section-desc">Duration of scheduled stay and daily room revenue rate</p>
           </div>
         </div>
 
@@ -296,16 +327,16 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-input"
               required
             />
-            <span className="field-help">Saturday or Sunday nights</span>
+            <span className="field-help">Saturday or Sunday nights.</span>
             {errors.stays_in_weekend_nights && (
               <span className="field-error-msg">{errors.stays_in_weekend_nights}</span>
             )}
           </div>
 
-          {/* Week Nights */}
+          {/* Weekday Nights */}
           <div className={`form-field ${errors.stays_in_week_nights ? 'has-error' : ''}`}>
             <label htmlFor="stays_in_week_nights" className="field-label">
-              <Calendar size={15} /> Week Nights <span className="required-star">*</span>
+              <Calendar size={15} /> Weekday Nights <span className="required-star">*</span>
             </label>
             <input
               id="stays_in_week_nights"
@@ -318,16 +349,19 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-input"
               required
             />
-            <span className="field-help">Monday to Friday nights</span>
+            <span className="field-help">Monday to Friday nights.</span>
             {errors.stays_in_week_nights && (
               <span className="field-error-msg">{errors.stays_in_week_nights}</span>
             )}
           </div>
 
-          {/* Average Daily Rate (ADR) */}
+          {/* Average Daily Room Rate (ADR) */}
           <div className={`form-field ${errors.adr ? 'has-error' : ''}`}>
             <label htmlFor="adr" className="field-label">
-              <DollarSign size={15} /> Average Daily Rate (ADR) <span className="required-star">*</span>
+              <DollarSign size={15} />
+              <span>Average Daily Room Rate</span>
+              <span className="field-label-sub">(ADR)</span>
+              <span className="required-star">*</span>
             </label>
             <input
               id="adr"
@@ -341,19 +375,19 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-input"
               required
             />
-            <span className="field-help">Daily rate in EUR/USD</span>
+            <span className="field-help">Average price per room per night in EUR/USD.</span>
             {errors.adr && <span className="field-error-msg">{errors.adr}</span>}
           </div>
         </div>
       </div>
 
-      {/* SECTION 3: Customer & Market Details */}
+      {/* SECTION 3: Customer & Booking Source */}
       <div className="form-section">
         <div className="section-header">
           <div className="section-number">3</div>
           <div>
-            <h2 className="section-title">Customer & Distribution Profile</h2>
-            <p className="section-desc">Deposit terms, booking source channel, and origin</p>
+            <h2 className="section-title">Guest Profile & Booking Channel</h2>
+            <p className="section-desc">Deposit terms, guest classification, and distribution source</p>
           </div>
         </div>
 
@@ -375,7 +409,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               <option value="Non Refund">Non Refund</option>
               <option value="Refundable">Refundable</option>
             </select>
-            <span className="field-help">Payment guarantee type</span>
+            <span className="field-help">Reservation guarantee policy.</span>
           </div>
 
           {/* Customer Type */}
@@ -391,12 +425,12 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-select"
               required
             >
-              <option value="Transient">Transient</option>
-              <option value="Transient-Party">Transient-Party</option>
-              <option value="Contract">Contract</option>
+              <option value="Transient">Transient (Individual)</option>
+              <option value="Transient-Party">Transient-Party (Associated)</option>
+              <option value="Contract">Contract (Corporate/Allotment)</option>
               <option value="Group">Group</option>
             </select>
-            <span className="field-help">Traveler reservation category</span>
+            <span className="field-help">Booking party structure.</span>
           </div>
 
           {/* Market Segment */}
@@ -412,15 +446,15 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               className="field-select"
               required
             >
-              <option value="Online TA">Online TA</option>
-              <option value="Offline TA/TO">Offline TA/TO</option>
+              <option value="Online TA">Online Travel Agency (OTA)</option>
+              <option value="Offline TA/TO">Offline TA / Tour Operator</option>
               <option value="Groups">Groups</option>
-              <option value="Direct">Direct</option>
+              <option value="Direct">Direct Hotel Booking</option>
               <option value="Corporate">Corporate</option>
               <option value="Complementary">Complementary</option>
               <option value="Aviation">Aviation</option>
             </select>
-            <span className="field-help">Reservation acquisition channel</span>
+            <span className="field-help">Booking channel origin.</span>
           </div>
         </div>
 
@@ -434,15 +468,15 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               id="country"
               name="country"
               type="text"
-              placeholder="PRT, GBR, FRA, or Unknown"
+              placeholder="PRT, GBR, FRA, ESP, or Unknown"
               value={formData.country}
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">ISO-3 country code (Default: Unknown)</span>
+            <span className="field-help">3-letter country code (Default: Unknown).</span>
           </div>
 
-          {/* Agent ID */}
+          {/* Booking Agent ID */}
           <div className="form-field">
             <label htmlFor="agent" className="field-label">
               <Briefcase size={15} /> Booking Agent ID
@@ -456,7 +490,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">Travel agent ID number (Default: No Agent)</span>
+            <span className="field-help">Partner agent identifier (Default: No Agent).</span>
           </div>
         </div>
       </div>
@@ -467,12 +501,12 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
           <div className="section-number">4</div>
           <div>
             <h2 className="section-title">History & Special Requests</h2>
-            <p className="section-desc">Prior guest behavior, reservation modifications, and special requests</p>
+            <p className="section-desc">Prior guest cancellations, reservation modifications, and requests</p>
           </div>
         </div>
 
         <div className="fields-grid grid-4">
-          {/* Previous Cancellations */}
+          {/* Previous Cancellations by Guest */}
           <div className={`form-field ${errors.previous_cancellations ? 'has-error' : ''}`}>
             <label htmlFor="previous_cancellations" className="field-label">
               <History size={15} /> Prev. Cancellations
@@ -486,7 +520,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">Prior cancelled bookings</span>
+            <span className="field-help">Previous cancellations by guest.</span>
             {errors.previous_cancellations && (
               <span className="field-error-msg">{errors.previous_cancellations}</span>
             )}
@@ -506,7 +540,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">Changes made to booking</span>
+            <span className="field-help">Amendments made before arrival.</span>
             {errors.booking_changes && (
               <span className="field-error-msg">{errors.booking_changes}</span>
             )}
@@ -526,7 +560,7 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">Vehicle spaces required</span>
+            <span className="field-help">Requested vehicle parking slots.</span>
             {errors.required_car_parking_spaces && (
               <span className="field-error-msg">{errors.required_car_parking_spaces}</span>
             )}
@@ -546,12 +580,17 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
               onChange={handleChange}
               className="field-input"
             />
-            <span className="field-help">Count of special requests</span>
+            <span className="field-help">High floor, twin beds, etc.</span>
             {errors.total_of_special_requests && (
               <span className="field-error-msg">{errors.total_of_special_requests}</span>
             )}
           </div>
         </div>
+      </div>
+
+      {/* SECTION 5: Review & Assessment Summary */}
+      <div className="form-section-review">
+        <AssessmentSummary formData={formData} />
       </div>
 
       {/* Form Action Buttons */}
@@ -562,23 +601,23 @@ export default function BookingForm({ onSubmit, isLoading, generalError }) {
           onClick={handleReset}
           disabled={isLoading}
         >
-          <RotateCcw size={16} /> Reset
+          <RotateCcw size={16} /> Reset Form
         </button>
 
         <button
           type="submit"
-          className="btn-primary"
+          className="btn-primary btn-submit-action"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
               <span className="spinner"></span>
-              <span>Predicting...</span>
+              <span>Assessing booking risk...</span>
             </>
           ) : (
             <>
               <Sparkle size={18} />
-              <span>Predict Cancellation Risk</span>
+              <span>Assess Cancellation Risk</span>
             </>
           )}
         </button>
